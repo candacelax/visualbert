@@ -1248,7 +1248,7 @@ class BertEmbeddingsWithVisualEmbedding(nn.Module):
                 position_embeddings_visual = self.position_embeddings_visual(position_ids_visual)
 
             v_embeddings = visual_embeddings + position_embeddings_visual + token_type_embeddings_visual
-
+            
             # Concate the two:
             embeddings = torch.cat((embeddings, v_embeddings), dim = 1) # concat the visual embeddings after the attentions
 
@@ -1277,7 +1277,7 @@ class BertVisualModel(PreTrainedBertModel):
             attention_mask = torch.ones_like(input_ids)
         if token_type_ids is None:
             token_type_ids = torch.zeros_like(input_ids)
-
+            
         # We create a 3D attention mask from a 2D tensor mask.
         # Sizes are [batch_size, 1, 1, to_seq_length]
         # So we can broadcast to [batch_size, num_heads, from_seq_length, to_seq_length]
@@ -1342,7 +1342,7 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
         config.bypass_transformer = bypass_transformer
 
         config.output_attention_weights = output_attention_weights  
-        self.output_attention_weights = output_attention_weights  
+        self.output_attention_weights = output_attention_weights
 
         self.cut_first = cut_first
         self.hard_cap_seq_len = hard_cap_seq_len
@@ -1427,23 +1427,8 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
         else:
             flat_attention_mask = flat_input_mask
 
-        if self.output_attention_weights:
-            sequence_output, pooled_output, attention_weights = self.bert(
-            flat_input_ids, 
-            flat_token_type_ids, 
-            flat_attention_mask,
-            visual_embeddings = flat_visual_embeddings, 
-            position_embeddings_visual = flat_position_embeddings_visual, 
-            visual_embeddings_type = visual_embeddings_type,
-            image_text_alignment = flat_image_text_alignment,
-            confidence = flat_confidence,
-            output_all_encoded_layers=output_all_encoded_layers)
-            output_dict = {}
-            output_dict["attention_weights"] = attention_weights
-            output_dict['loss'] = None
-            return output_dict
 
-        sequence_output, pooled_output = self.bert(
+        output = self.bert(
             flat_input_ids, 
             flat_token_type_ids, 
             flat_attention_mask,
@@ -1455,7 +1440,12 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
             output_all_encoded_layers=output_all_encoded_layers)
 
         output_dict = {}
-
+        if self.output_attention_weights:
+            sequence_output, pooled_output, attention_weights = output
+            output_dict['attention_weights'] = attention_weights
+        else:
+            sequence_output, pooled_output = output
+        
         if output_all_encoded_layers:
             output_dict["sequence_output"] = sequence_output
             output_dict["pooled_output"] = pooled_output
@@ -1507,6 +1497,7 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
             flat_input_ids = torch.gather(flat_input_ids, 1, index_to_gather.unsqueeze(-1).expand(index_to_gather.size(0), 1))
 
             pooled_output = self.dropout(pooled_output)
+
             logits = self.classifier(pooled_output)
             reshaped_logits = logits.contiguous().view(-1, 3129)
 
