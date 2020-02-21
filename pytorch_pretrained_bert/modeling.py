@@ -1188,7 +1188,7 @@ class BertEmbeddingsWithVisualEmbedding(nn.Module):
 
         self.projection = nn.Linear(config.visual_embedding_dim, config.hidden_size)
 
-    def special_intialize(self, method_type = 0):
+    def special_initialize(self, method_type = 0):
         ### This is a bit unorthodox. The better way might be to add an inititilizer to AllenNLP.
         # This function is used to initialize the token_type_embeddings_visual and positiona_embedding_visual, just incase.
         self.token_type_embeddings_visual.weight = torch.nn.Parameter(deepcopy(self.token_type_embeddings.weight.data), requires_grad = True)
@@ -1273,6 +1273,7 @@ class BertVisualModel(PreTrainedBertModel):
         self.apply(self.init_bert_weights)
 
     def forward(self, input_ids, token_type_ids, attention_mask, visual_embeddings, position_embeddings_visual, visual_embeddings_type, image_text_alignment, confidence, output_all_encoded_layers=True):
+
         if attention_mask is None:
             attention_mask = torch.ones_like(input_ids)
         if token_type_ids is None:
@@ -1386,11 +1387,12 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
         label=None,
         flickr_position = None,
         masked_lm_labels=None,
-        image_lm_lables=None,
+        image_lm_labels=None,
         is_random_next=None,
 
         output_all_encoded_layers = False):
 
+        
         # We want to convert everything into: batch x sequence_length x (dim).
 
         flat_input_ids = transform_to_batch_sequence(input_ids)
@@ -1416,7 +1418,7 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
         if flat_image_mask is not None:
             flat_attention_mask = torch.cat((flat_input_mask, flat_image_mask), dim = -1)
 
-            assert(image_lm_lables is None) # Do not support this yet
+            assert(image_lm_labels is None) # Do not support this yet
             if flat_masked_lm_labels is not None:
                 assert(flat_masked_lm_labels.size(-1) == flat_input_mask.size(-1))
                 new_lm_labels = torch.ones_like(flat_attention_mask) * -1
@@ -1445,12 +1447,13 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
             output_dict['attention_weights'] = attention_weights
         else:
             sequence_output, pooled_output = output
-        
+
         if output_all_encoded_layers:
             output_dict["sequence_output"] = sequence_output
             output_dict["pooled_output"] = pooled_output
             output_dict["loss"] = None
             return output_dict
+
 
         if self.training_head_type == "pretraining":
             prediction_scores, seq_relationship_score = self.cls(sequence_output, pooled_output)

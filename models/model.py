@@ -147,7 +147,6 @@ class VisualBERTDetector(Model):
             box_mask_expanded = box_mask.unsqueeze(1).expand(box_mask.size(0), bert_input_mask.size(1), box_mask.size(-1))
         
         #bert_input_mask = torch.cat((bert_input_mask, box_mask_expanded), dim = -1)
-
         output_dict = self.bert(
             input_ids = bert_input_ids, 
             token_type_ids = bert_input_type_ids, 
@@ -222,7 +221,7 @@ class VisualBERTFixedImageEmbedding(Model):
                 random_initialize = random_initialize,
                 output_attention_weights = output_attention_weights)
         if special_visual_initialize:
-            self.bert.bert.embeddings.special_intialize()
+            self.bert.bert.embeddings.special_initialize()
 
         if self.training_head_type == "nlvr" or self.training_head_type == "multichoice":
             self._accuracy = CategoricalAccuracy()
@@ -230,7 +229,7 @@ class VisualBERTFixedImageEmbedding(Model):
             self._accuracy = Average()
         if self.training_head_type == "flickr":
             self._accuracy = Average()
-
+            
     def forward(self,
 
                 #bert text input
