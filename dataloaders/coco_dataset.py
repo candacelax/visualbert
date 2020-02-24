@@ -55,7 +55,8 @@ class COCODataset(Dataset):
 
         self.image_feat_reader = faster_RCNN_feat_reader()
 
-        if args.get("chunk_path", None) is not None and self.image_feature_type == "nlvr":
+        if args.get("chunk_path", None) is not None and self.image_feature_type == "nlvr" \
+           and not self.text_only:
             print("Loading images...")
             self.chunk = torch.load(args.chunk_path)
             average = 0.0
@@ -80,7 +81,7 @@ class COCODataset(Dataset):
         self.pretraining = args.pretraining
         self.masked_lm_prob = args.get("masked_lm_prob", 0.15)
 
-        with open(os.path.join('./cocoontology.json'), 'r') as f:
+        with open(os.path.join(args.coco_ontology), 'r') as f:
             coco = json.load(f)
         self.coco_objects = ['__background__'] + [x['name'] for k, x in sorted(coco.items(), key=lambda x: int(x[0]))]
         self.coco_obj_to_ind = {o: i for i, o in enumerate(self.coco_objects)}
@@ -229,7 +230,7 @@ class COCODataset(Dataset):
                     tokenizer=self.tokenizer,
                     probability = self.masked_lm_prob)
         bert_feature.insert_field_into_dict(sample)
-
+        
         return Instance(sample)
 
     def __getitem_detector__(self, index):
@@ -428,7 +429,9 @@ class COCODataset(Dataset):
 
             trainset.coco_val = validationset.coco
 
-            if args.image_feature_type != "r2c" and args.image_feature_type != "vqa_fix_100" and args.image_feature_type != "flickr": # For NLVR, we pre-load features so we need to expand the chunk as well
+            if not args.get('text_only', False) and \
+               args.image_feature_type != "r2c" and args.image_feature_type != "vqa_fix_100" \
+               and args.image_feature_type != "flickr": # For NLVR, we pre-load features so we need to expand the chunk as well
                 trainset.chunk_val = validationset.chunk
 
             imdb = np.load(os.path.join(data_root, "data/imdb/imdb_minival2014.npy"), allow_pickle = True)[1:]
