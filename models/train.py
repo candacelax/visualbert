@@ -1,6 +1,8 @@
 """
 Training script. Should be pretty adaptable to whatever.
 """
+
+# python train.py -folder ../logs -config ../configs/nlvr2/coco-pre-train.json 
 import argparse
 import os
 import shutil
@@ -85,6 +87,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 args = ModelWrapper.read_and_insert_args(args, args.config)
+
 ##################################################### 
 
 if os.path.exists(args.folder):
@@ -195,7 +198,6 @@ train_loader, val_loader, test_loader, train_set_size = get_dataset_loader(args,
 
 
 ARGS_RESET_EVERY = args.get("print_every", 100)
-
 
 train_model = ModelWrapper(args, train_set_size)
 
