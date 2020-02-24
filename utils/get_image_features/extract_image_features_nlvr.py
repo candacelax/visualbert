@@ -40,9 +40,9 @@ import json
 
 import torch
 from tqdm import tqdm
-from detectron.utils.io import cache_url
-import detectron.utils.c2 as c2_utils
 
+from detectron.utils.io import cache_url # make sure to add Detectron to PYTHONPATH
+import detectron.utils.c2 as c2_utils
 
 c2_utils.import_detectron_ops()
 # OpenCL may be enabled by default in OpenCV3; disable it because it's not
@@ -185,6 +185,7 @@ def parse_args():
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
+
     return parser.parse_args()
 
 
@@ -192,11 +193,11 @@ def get_detections_from_im(cfg, model, im, image_id, feat_blob_name,
                             MIN_BOXES, MAX_BOXES, conf_thresh=0.2, bboxes=None):
 
     with c2_utils.NamedCudaScope(0):
-        scores, cls_boxes, im_scale = infer_engine.im_detect_bbox(model, 
-                                                                im,
-                                                                cfg.TEST.SCALE,
-                                                                cfg.TEST.MAX_SIZE,
-                                                                boxes=bboxes)
+        scores, cls_boxes, im_scale = infer_engine.im_detect_bbox(model,
+                                                                  im,
+                                                                  cfg.TEST.SCALE,
+                                                                  cfg.TEST.MAX_SIZE,
+                                                                  boxes=bboxes)
         box_features = workspace.FetchBlob(feat_blob_name)
         cls_prob = workspace.FetchBlob("gpu_0/cls_prob")
         rois = workspace.FetchBlob("gpu_0/rois")
@@ -309,8 +310,8 @@ def main(args):
         if args.existing:
             if im_base_name in giant_file:
                 continue
-            else:
-                print("Missing {}...".format(im_base_name))
+            #else:
+            #    print("Missing {}...".format(im_base_name))
         im = cv2.imread(im_name)
         if im is not None:
             outfile = os.path.join(args.output_dir, im_base_name) + ".npz"
