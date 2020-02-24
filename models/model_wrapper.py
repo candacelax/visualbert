@@ -18,7 +18,7 @@ from tqdm import tqdm
 
 from allennlp.nn.util import device_mapping
 from utils.pytorch_misc import time_batch, save_checkpoint, clip_grad_norm, \
-    restore_checkpoint, print_para, restore_best_checkpoint, load_state_dict_flexible
+     restore_checkpoint, print_para, restore_best_checkpoint, load_state_dict_flexible
 
 from visualbert.pytorch_pretrained_bert.optimization import BertAdam, WarmupLinearSchedule
 
@@ -38,7 +38,7 @@ class ModelWrapper():
         self.args.gradient_accumulation_steps = args.get("gradient_accumulation_steps", 1)
         self.args.fp16 = args.get("fp16", False)
         self.initialize_model(args)
-        self.initialize_opimizer(args, train_dataset_length)
+        self.initialize_optimizer(args, train_dataset_length)
 
         self.global_step = 0
         self.called_time = 0
@@ -95,9 +95,7 @@ class ModelWrapper():
 
         self.called_time += 1
 
-        return output_dict
-
-    def initialize_opimizer(self, args, train_dataset_length):
+    def initialize_optimizer(self, args, train_dataset_length):
         param_optimizer = list(self.model.named_parameters())
         # hack to remove pooler, which is not used
         # thus it produce None grad that break apex
@@ -144,7 +142,6 @@ class ModelWrapper():
             model.half()
             print("Using FP 16, Model Halfed")
         self.model = DataParallel(model).cuda()
-        
 
     def load_state_dict(self, state_dict_to_load):
         if isinstance(self.model, DataParallel):
@@ -242,7 +239,4 @@ class ModelWrapper():
         args = AttrDict(config_json)
         args.model.bert_model_name = args.bert_model_name
         return args
-
-
-
-
+    
