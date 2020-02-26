@@ -1465,7 +1465,6 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
             output_dict["seq_relationship_score"] = seq_relationship_score
             output_dict["loss"] = None
 
-            print('inside', prediction_scores.shape, flat_masked_lm_labels.shape)
             if flat_masked_lm_labels is not None and is_random_next is not None:
                 loss_fct = CrossEntropyLoss(ignore_index=-1)
                 masked_lm_loss = loss_fct(prediction_scores.contiguous().view(-1, self.config.vocab_size), flat_masked_lm_labels.contiguous().view(-1))
