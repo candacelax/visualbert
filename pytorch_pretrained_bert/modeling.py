@@ -1268,7 +1268,7 @@ class BertVisualModel(PreTrainedBertModel):
         if self.bypass_transformer:
             self.additional_layer = BertLayer(config)   
 
-        self.output_attention_weights = config.output_attention_weights         
+        self.output_attention_weights = config.output_attention_weights
 
         self.apply(self.init_bert_weights)
 
@@ -1370,7 +1370,7 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
             self.cls = BertPreTrainingHeads(config, self.bert.embeddings.word_embeddings.weight)
             self.flickr_attention = FlickrAttention(config)
         self.apply(self.init_bert_weights)
-
+                                    
     def forward(
         self, 
         input_ids, 
@@ -1394,7 +1394,7 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
 
         
         # We want to convert everything into: batch x sequence_length x (dim).
-
+        
         flat_input_ids = transform_to_batch_sequence(input_ids)
         flat_token_type_ids = transform_to_batch_sequence(token_type_ids)
         flat_input_mask = transform_to_batch_sequence(input_mask)
@@ -1452,15 +1452,20 @@ class TrainVisualBERTObjective(PreTrainedBertModel):
             output_dict["sequence_output"] = sequence_output
             output_dict["pooled_output"] = pooled_output
             output_dict["loss"] = None
-            return output_dict
+            #return output_dict
 
 
+        # only keep final seq for predictions & loss
+        if isinstance(sequence_output, list):
+            sequence_output = sequence_output[-1]
+            
         if self.training_head_type == "pretraining":
             prediction_scores, seq_relationship_score = self.cls(sequence_output, pooled_output)
             output_dict["logits"] = prediction_scores
             output_dict["seq_relationship_score"] = seq_relationship_score
             output_dict["loss"] = None
 
+            print('inside', prediction_scores.shape, flat_masked_lm_labels.shape)
             if flat_masked_lm_labels is not None and is_random_next is not None:
                 loss_fct = CrossEntropyLoss(ignore_index=-1)
                 masked_lm_loss = loss_fct(prediction_scores.contiguous().view(-1, self.config.vocab_size), flat_masked_lm_labels.contiguous().view(-1))
