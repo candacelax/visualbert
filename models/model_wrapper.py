@@ -49,10 +49,10 @@ class ModelWrapper():
     def eval(self):
         self.model.eval()
 
-    def step(self, batch, eval_mode=False):
+    def step(self, batch, eval_mode=False, output_all_encoded_layers=False):
         if eval_mode:
             with torch.no_grad():
-                output_dict = self.model(**batch)
+                output_dict = self.model(**batch, output_all_encoded_layers=output_all_encoded_layers)
 
                 if output_dict['loss'] is not None:
                     loss = output_dict['loss'].mean()
