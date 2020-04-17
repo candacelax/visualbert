@@ -75,6 +75,7 @@ BOTTOM_UP_FIELDNAMES = ['image_id', 'image_w', 'image_h',
 FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 
             'boxes', 'features', 'object']
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='End-to-end inference')
     parser.add_argument(
@@ -169,7 +170,7 @@ def parse_args():
         default="gpu_0/fc7"
     )
     parser.add_argument(
-        'im_or_folder', help='image or folder of images', default=None
+        '--im_or_folder', help='image or folder of images', default=None
     )
 
     parser.add_argument(
@@ -264,7 +265,7 @@ def recurse_find_image(folder, image_list, image_ext):
                 image_list.append(path)
 
 
-def main(args):
+def main(args, im_list=[]):
     logger = logging.getLogger(__name__)
     merge_cfg_from_file(args.cfg)
     cfg.NUM_GPUS = 1
@@ -273,8 +274,8 @@ def main(args):
     model = model_engine.initialize_model_from_cfg(args.weights)
     start = timeit.default_timer()
 
-    im_list = []
-    recurse_find_image(args.im_or_folder, im_list, args.image_ext)
+    if len(im_list) == 0:
+        recurse_find_image(args.im_or_folder, im_list, args.image_ext)
     print("There are {} images to cache in total.".format(len(im_list)))
 
     if args.total_split != 1:
