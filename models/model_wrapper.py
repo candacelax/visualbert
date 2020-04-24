@@ -94,6 +94,7 @@ class ModelWrapper():
             self.global_step += 1
 
         self.called_time += 1
+        return output_dict
 
     def initialize_optimizer(self, args, train_dataset_length):
         param_optimizer = list(self.model.named_parameters())
